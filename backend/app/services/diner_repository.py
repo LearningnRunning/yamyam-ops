@@ -178,12 +178,10 @@ class DinerRepository:
 
         for item in filtered_results:
             try:
-                # FilteredDinerResponse는 id, diner_idx, distance만 포함
+                # FilteredDinerResponse는 id, diner_id, distance만 포함
                 # 전체 정보를 조회하려면 get_by_id() 호출 필요
                 diner_idx = (
-                    item.diner_idx
-                    if hasattr(item, "diner_idx")
-                    else item.get("diner_idx")
+                    item.diner_id if hasattr(item, "diner_id") else item.get("diner_id")
                 )
 
                 if diner_idx:

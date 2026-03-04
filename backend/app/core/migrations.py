@@ -80,46 +80,51 @@ def check_column_type(table_name: str, column_name: str) -> str | None:
 
 
 def migrate_diner_review_cnt_to_integer():
-    """diner_review_cnt 컬럼 타입을 VARCHAR에서 INTEGER로 변경"""
+    """review_cnt(또는 diner_review_cnt) 컬럼 타입을 VARCHAR에서 INTEGER로 변경"""
     try:
-        # 테이블 존재 확인
-        if not check_column_exists("kakao_diner", "diner_review_cnt"):
-            logger.info("diner_review_cnt 컬럼이 존재하지 않습니다.")
+        # 신규 컬럼명 우선 확인, 없으면 구 컬럼명 확인
+        col_name = None
+        if check_column_exists("kakao_diner", "review_cnt"):
+            col_name = "review_cnt"
+        elif check_column_exists("kakao_diner", "diner_review_cnt"):
+            col_name = "diner_review_cnt"
+        else:
+            logger.info("review_cnt / diner_review_cnt 컬럼이 존재하지 않습니다.")
             return False
 
         # 현재 타입 확인
-        current_type = check_column_type("kakao_diner", "diner_review_cnt")
+        current_type = check_column_type("kakao_diner", col_name)
 
         if current_type == "integer":
-            logger.info("diner_review_cnt 컬럼이 이미 INTEGER 타입입니다.")
+            logger.info(f"{col_name} 컬럼이 이미 INTEGER 타입입니다.")
             return False
 
         if current_type != "character varying":
             logger.warning(
-                f"diner_review_cnt 컬럼의 현재 타입이 {current_type}입니다. "
+                f"{col_name} 컬럼의 현재 타입이 {current_type}입니다. "
                 "VARCHAR 타입이 아니므로 마이그레이션을 건너뜁니다."
             )
             return False
 
         # 컬럼 타입 변경
-        logger.info("diner_review_cnt 컬럼 타입을 INTEGER로 변경 중...")
+        logger.info(f"{col_name} 컬럼 타입을 INTEGER로 변경 중...")
         with db.get_cursor() as (cursor, conn):
-            alter_sql = """
+            alter_sql = f"""
                 ALTER TABLE kakao_diner
-                ALTER COLUMN diner_review_cnt TYPE INTEGER
+                ALTER COLUMN {col_name} TYPE INTEGER
                 USING CASE
-                    WHEN diner_review_cnt IS NULL OR TRIM(diner_review_cnt) = '' THEN 0
-                    WHEN diner_review_cnt ~ '^[0-9]+\\.?[0-9]*$' THEN 
-                        CAST(CAST(diner_review_cnt AS NUMERIC) AS INTEGER)
+                    WHEN {col_name} IS NULL OR TRIM({col_name}) = '' THEN 0
+                    WHEN {col_name} ~ '^[0-9]+\\.?[0-9]*$' THEN
+                        CAST(CAST({col_name} AS NUMERIC) AS INTEGER)
                     ELSE 0
                 END
             """
             cursor.execute(alter_sql)
             conn.commit()
-            logger.info("diner_review_cnt 컬럼이 INTEGER 타입으로 변경되었습니다.")
+            logger.info(f"{col_name} 컬럼이 INTEGER 타입으로 변경되었습니다.")
             return True
     except Exception as e:
-        logger.error(f"diner_review_cnt 컬럼 타입 변경 중 오류 발생: {e}")
+        logger.error(f"review_cnt 컬럼 타입 변경 중 오류 발생: {e}")
         raise
 
 
@@ -148,7 +153,7 @@ def create_performance_indexes():
     basic_indexes = [
         "CREATE INDEX IF NOT EXISTS idx_kakao_diner_bayesian_score ON kakao_diner(bayesian_score DESC)",
         "CREATE INDEX IF NOT EXISTS idx_kakao_diner_hidden_score ON kakao_diner(hidden_score DESC)",
-        "CREATE INDEX IF NOT EXISTS idx_kakao_diner_review_avg ON kakao_diner(diner_review_avg DESC)",
+        "CREATE INDEX IF NOT EXISTS idx_kakao_diner_review_avg ON kakao_diner(review_avg DESC)",
     ]
 
     # PostGIS 확장 설치
@@ -158,20 +163,20 @@ def create_performance_indexes():
 
     # 공간 인덱스 (High Priority) - PostGIS GIST 인덱스
     spatial_indexes = [
-        "CREATE INDEX IF NOT EXISTS idx_kakao_diner_location ON kakao_diner USING GIST (ST_MakePoint(diner_lon, diner_lat))",
+        "CREATE INDEX IF NOT EXISTS idx_kakao_diner_location ON kakao_diner USING GIST (ST_MakePoint(lon, lat))",
     ]
 
     # PostGIS가 없을 경우 대체 인덱스
     fallback_spatial_indexes = [
-        "CREATE INDEX IF NOT EXISTS idx_kakao_diner_lat_lon ON kakao_diner(diner_lat, diner_lon)",
+        "CREATE INDEX IF NOT EXISTS idx_kakao_diner_lat_lon ON kakao_diner(lat, lon)",
     ]
 
     # 복합 인덱스 (Medium Priority)
     composite_indexes = [
-        "CREATE INDEX IF NOT EXISTS idx_kakao_diner_cat_large_bayesian ON kakao_diner(diner_category_large, bayesian_score DESC)",
-        "CREATE INDEX IF NOT EXISTS idx_kakao_diner_cat_middle_bayesian ON kakao_diner(diner_category_middle, bayesian_score DESC)",
-        "CREATE INDEX IF NOT EXISTS idx_kakao_diner_cat_large_hidden ON kakao_diner(diner_category_large, hidden_score DESC)",
-        "CREATE INDEX IF NOT EXISTS idx_kakao_diner_cat_large_rating ON kakao_diner(diner_category_large, diner_review_avg DESC)",
+        "CREATE INDEX IF NOT EXISTS idx_kakao_diner_cat_large_bayesian ON kakao_diner(category_large, bayesian_score DESC)",
+        "CREATE INDEX IF NOT EXISTS idx_kakao_diner_cat_middle_bayesian ON kakao_diner(category_middle, bayesian_score DESC)",
+        "CREATE INDEX IF NOT EXISTS idx_kakao_diner_cat_large_hidden ON kakao_diner(category_large, hidden_score DESC)",
+        "CREATE INDEX IF NOT EXISTS idx_kakao_diner_cat_large_rating ON kakao_diner(category_large, review_avg DESC)",
     ]
 
     # pg_trgm 확장 및 GIN 인덱스 (LIKE 검색 최적화)
@@ -180,8 +185,8 @@ def create_performance_indexes():
     ]
 
     trgm_indexes = [
-        "CREATE INDEX IF NOT EXISTS idx_kakao_diner_cat_large_trgm ON kakao_diner USING GIN (diner_category_large gin_trgm_ops)",
-        "CREATE INDEX IF NOT EXISTS idx_kakao_diner_cat_middle_trgm ON kakao_diner USING GIN (diner_category_middle gin_trgm_ops)",
+        "CREATE INDEX IF NOT EXISTS idx_kakao_diner_cat_large_trgm ON kakao_diner USING GIN (category_large gin_trgm_ops)",
+        "CREATE INDEX IF NOT EXISTS idx_kakao_diner_cat_middle_trgm ON kakao_diner USING GIN (category_middle gin_trgm_ops)",
     ]
 
     # 각 인덱스를 독립적인 트랜잭션으로 생성
@@ -269,7 +274,7 @@ def create_kakao_diner_open_hours_table():
             # 테이블 존재 여부 확인
             cursor.execute("""
                 SELECT EXISTS (
-                    SELECT FROM information_schema.tables 
+                    SELECT FROM information_schema.tables
                     WHERE table_name = 'kakao_diner_open_hours'
                 ) AS exists;
             """)
@@ -282,14 +287,14 @@ def create_kakao_diner_open_hours_table():
                 # UNIQUE 제약조건 또는 인덱스 확인
                 cursor.execute("""
                     SELECT EXISTS (
-                        SELECT 1 FROM pg_constraint 
+                        SELECT 1 FROM pg_constraint
                         WHERE conrelid = 'kakao_diner_open_hours'::regclass
                         AND contype = 'u'
                     ) OR EXISTS (
-                        SELECT 1 FROM pg_indexes 
+                        SELECT 1 FROM pg_indexes
                         WHERE tablename = 'kakao_diner_open_hours'
                         AND indexdef LIKE '%UNIQUE%'
-                        AND indexdef LIKE '%diner_idx%'
+                        AND (indexdef LIKE '%diner_id%' OR indexdef LIKE '%diner_idx%')
                         AND indexdef LIKE '%day_of_week%'
                     ) AS exists;
                 """)
@@ -313,8 +318,8 @@ def create_kakao_diner_open_hours_table():
                         )
                         try:
                             cursor.execute("""
-                                CREATE UNIQUE INDEX IF NOT EXISTS 
-                                idx_kakao_diner_open_hours_unique 
+                                CREATE UNIQUE INDEX IF NOT EXISTS
+                                idx_kakao_diner_open_hours_unique
                                 ON kakao_diner_open_hours(diner_idx, day_of_week);
                             """)
                             conn.commit()
@@ -328,7 +333,7 @@ def create_kakao_diner_open_hours_table():
                 cursor.execute("""
                     CREATE TABLE kakao_diner_open_hours (
                         id VARCHAR(26) PRIMARY KEY,
-                        diner_idx INTEGER NOT NULL,
+                        diner_id INTEGER NOT NULL,
                         day_of_week INTEGER NOT NULL,
                         is_open BOOLEAN NOT NULL DEFAULT TRUE,
                         start_time TIME,
@@ -336,10 +341,10 @@ def create_kakao_diner_open_hours_table():
                         description TEXT,
                         created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
                         updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-                        
-                        FOREIGN KEY (diner_idx) REFERENCES kakao_diner(diner_idx) ON DELETE CASCADE,
-                        CONSTRAINT kakao_diner_open_hours_diner_idx_day_of_week_unique
-                        UNIQUE(diner_idx, day_of_week)
+
+                        FOREIGN KEY (diner_id) REFERENCES kakao_diner(diner_id) ON DELETE CASCADE,
+                        CONSTRAINT kakao_diner_open_hours_diner_id_day_of_week_unique
+                        UNIQUE(diner_id, day_of_week)
                     );
                 """)
                 conn.commit()
@@ -355,8 +360,8 @@ def create_kakao_diner_open_hours_table():
             for index_name, column_name in indexes:
                 cursor.execute(f"""
                     SELECT EXISTS (
-                        SELECT 1 FROM pg_indexes 
-                        WHERE tablename = 'kakao_diner_open_hours' 
+                        SELECT 1 FROM pg_indexes
+                        WHERE tablename = 'kakao_diner_open_hours'
                         AND indexname = '{index_name}'
                     ) AS exists;
                 """)
@@ -365,7 +370,7 @@ def create_kakao_diner_open_hours_table():
 
                 if not index_exists:
                     cursor.execute(f"""
-                        CREATE INDEX {index_name} 
+                        CREATE INDEX {index_name}
                         ON kakao_diner_open_hours({column_name});
                     """)
                     conn.commit()
@@ -389,7 +394,7 @@ def create_kakao_diner_menus_table():
             # 테이블 존재 여부 확인
             cursor.execute("""
                 SELECT EXISTS (
-                    SELECT FROM information_schema.tables 
+                    SELECT FROM information_schema.tables
                     WHERE table_name = 'kakao_diner_menus'
                 ) AS exists;
             """)
@@ -403,7 +408,7 @@ def create_kakao_diner_menus_table():
                 cursor.execute("""
                     CREATE TABLE kakao_diner_menus (
                         id VARCHAR(26) PRIMARY KEY,
-                        diner_idx INTEGER NOT NULL,
+                        diner_id INTEGER NOT NULL,
                         name VARCHAR(255) NOT NULL,
                         product_id VARCHAR(255) NOT NULL,
                         price DOUBLE PRECISION,
@@ -414,8 +419,8 @@ def create_kakao_diner_menus_table():
                         mod_at TIMESTAMP WITH TIME ZONE,
                         created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
                         updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-                        
-                        FOREIGN KEY (diner_idx) REFERENCES kakao_diner(diner_idx) ON DELETE CASCADE
+
+                        FOREIGN KEY (diner_id) REFERENCES kakao_diner(diner_id) ON DELETE CASCADE
                     );
                 """)
                 conn.commit()
@@ -432,8 +437,8 @@ def create_kakao_diner_menus_table():
             for index_name, column_name in indexes:
                 cursor.execute(f"""
                     SELECT EXISTS (
-                        SELECT 1 FROM pg_indexes 
-                        WHERE tablename = 'kakao_diner_menus' 
+                        SELECT 1 FROM pg_indexes
+                        WHERE tablename = 'kakao_diner_menus'
                         AND indexname = '{index_name}'
                     ) AS exists;
                 """)
@@ -442,7 +447,7 @@ def create_kakao_diner_menus_table():
 
                 if not index_exists:
                     cursor.execute(f"""
-                        CREATE INDEX {index_name} 
+                        CREATE INDEX {index_name}
                         ON kakao_diner_menus({column_name});
                     """)
                     conn.commit()
@@ -464,7 +469,7 @@ def create_kakao_diner_ai_data_table():
             # 테이블 존재 여부 확인
             cursor.execute("""
                 SELECT EXISTS (
-                    SELECT FROM information_schema.tables 
+                    SELECT FROM information_schema.tables
                     WHERE table_name = 'kakao_diner_ai_data'
                 ) AS exists;
             """)
@@ -476,7 +481,7 @@ def create_kakao_diner_ai_data_table():
                 cursor.execute("""
                     CREATE TABLE kakao_diner_ai_data (
                         id VARCHAR(26) PRIMARY KEY,
-                        diner_idx INTEGER NOT NULL UNIQUE,
+                        diner_id INTEGER NOT NULL UNIQUE,
                         ai_bottom_sheet_title VARCHAR(500),
                         ai_bottom_sheet_summary TEXT,
                         ai_bottom_sheet_sheets JSONB,
@@ -485,8 +490,8 @@ def create_kakao_diner_ai_data_table():
                         all_keywords TEXT,
                         created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
                         updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-                        
-                        FOREIGN KEY (diner_idx) REFERENCES kakao_diner(diner_idx) ON DELETE CASCADE
+
+                        FOREIGN KEY (diner_id) REFERENCES kakao_diner(diner_id) ON DELETE CASCADE
                     );
                 """)
                 conn.commit()
@@ -548,8 +553,8 @@ def create_kakao_diner_ai_data_table():
 
                 cursor.execute(f"""
                     SELECT EXISTS (
-                        SELECT 1 FROM pg_indexes 
-                        WHERE tablename = 'kakao_diner_ai_data' 
+                        SELECT 1 FROM pg_indexes
+                        WHERE tablename = 'kakao_diner_ai_data'
                         AND indexname = '{index_name}'
                     ) AS exists;
                 """)
@@ -560,13 +565,13 @@ def create_kakao_diner_ai_data_table():
                     if custom_index:
                         # 커스텀 인덱스 (GIN 등)
                         cursor.execute(f"""
-                            CREATE INDEX {index_name} 
+                            CREATE INDEX {index_name}
                             ON kakao_diner_ai_data USING {custom_index};
                         """)
                     else:
                         # 일반 인덱스
                         cursor.execute(f"""
-                            CREATE INDEX {index_name} 
+                            CREATE INDEX {index_name}
                             ON kakao_diner_ai_data({column_name});
                         """)
                     conn.commit()
@@ -579,6 +584,114 @@ def create_kakao_diner_ai_data_table():
     except Exception as e:
         logger.error(f"kakao_diner_ai_data 테이블 생성 중 오류 발생: {e}")
         raise
+
+
+def rename_column_if_exists(table_name: str, old_name: str, new_name: str) -> bool:
+    """컬럼이 존재하면 이름 변경 (이미 변경된 경우 스킵)"""
+    try:
+        if not check_column_exists(table_name, old_name):
+            if check_column_exists(table_name, new_name):
+                logger.info(f"{table_name}.{old_name} → {new_name}: 이미 변경됨")
+            else:
+                logger.warning(f"{table_name}.{old_name}: 컬럼이 존재하지 않음")
+            return False
+
+        with db.get_cursor() as (cursor, conn):
+            cursor.execute(
+                f"ALTER TABLE {table_name} RENAME COLUMN {old_name} TO {new_name}"
+            )
+            conn.commit()
+            logger.info(f"{table_name}.{old_name} → {new_name} 변경 완료")
+            return True
+    except Exception as e:
+        logger.error(
+            f"컬럼 이름 변경 중 오류: {table_name}.{old_name} → {new_name}: {e}"
+        )
+        raise
+
+
+def migrate_rename_kakao_diner_columns():
+    """kakao_diner 테이블 컬럼 이름 변경 (diner_ 접두사 제거, diner_idx → diner_id)"""
+    logger.info("kakao_diner 컬럼 이름 변경 시작...")
+
+    # 자식 테이블의 diner_idx 먼저 rename (FK 정합성)
+    for child_table in (
+        "kakao_review",
+        "kakao_diner_open_hours",
+        "kakao_diner_menus",
+        "kakao_diner_ai_data",
+    ):
+        rename_column_if_exists(child_table, "diner_idx", "diner_id")
+
+    renames = [
+        ("diner_idx", "diner_id"),
+        ("diner_name", "name"),
+        ("diner_tag", "tag"),
+        ("diner_menu_name", "menu_name"),
+        ("diner_menu_price", "menu_price"),
+        ("diner_review_cnt", "review_cnt"),
+        ("diner_review_avg", "review_avg"),
+        ("diner_blog_review_cnt", "blog_review_cnt"),
+        ("diner_review_tags", "review_tags"),
+        ("diner_road_address", "road_address"),
+        ("diner_num_address", "num_address"),
+        ("diner_phone", "phone"),
+        ("diner_lat", "lat"),
+        ("diner_lon", "lon"),
+        ("diner_open_time", "open_time"),
+        ("diner_category_large", "category_large"),
+        ("diner_category_middle", "category_middle"),
+        ("diner_category_small", "category_small"),
+        ("diner_category_detail", "category_detail"),
+        ("diner_grade", "grade"),
+    ]
+
+    for old_name, new_name in renames:
+        rename_column_if_exists("kakao_diner", old_name, new_name)
+
+    logger.info("kakao_diner 컬럼 이름 변경 완료")
+
+
+def migrate_rename_kakao_reviewer_columns():
+    """kakao_reviewer 테이블 컬럼 이름 변경 (reviewer_ 접두사 제거)"""
+    logger.info("kakao_reviewer 컬럼 이름 변경 시작...")
+
+    renames = [
+        ("reviewer_user_name", "user_name"),
+        ("reviewer_review_cnt", "review_cnt"),
+        ("reviewer_avg", "avg"),
+    ]
+
+    for old_name, new_name in renames:
+        rename_column_if_exists("kakao_reviewer", old_name, new_name)
+
+    logger.info("kakao_reviewer 컬럼 이름 변경 완료")
+
+
+def migrate_rename_kakao_review_columns():
+    """kakao_review 테이블 컬럼 이름 변경 + 신규 컬럼 추가"""
+    logger.info("kakao_review 컬럼 이름 변경 및 추가 시작...")
+
+    renames = [
+        ("reviewer_review", "text"),
+        ("reviewer_review_date", "date"),
+        ("reviewer_review_score", "star"),
+    ]
+
+    for old_name, new_name in renames:
+        rename_column_if_exists("kakao_review", old_name, new_name)
+
+    new_columns = [
+        ("near", "BOOLEAN", True, None),
+        ("is_place_owner_pick", "BOOLEAN", True, None),
+        ("like_count", "INTEGER", True, None),
+        ("photo_count", "INTEGER", True, None),
+    ]
+
+    for col_name, col_type, nullable, default in new_columns:
+        add_column_if_not_exists("kakao_review", col_name, col_type, nullable, default)
+
+    logger.info("kakao_review 컬럼 이름 변경 및 추가 완료")
 
 
 def run_migrations():
@@ -634,6 +747,11 @@ def run_migrations():
 
         # kakao_diner_ai_data 테이블 생성
         create_kakao_diner_ai_data_table()
+
+        # 컬럼 이름 변경 (diner_ 접두사 제거, diner_idx → diner_id 등)
+        migrate_rename_kakao_diner_columns()
+        migrate_rename_kakao_reviewer_columns()
+        migrate_rename_kakao_review_columns()
 
         logger.info("데이터베이스 마이그레이션 완료")
     except Exception as e:

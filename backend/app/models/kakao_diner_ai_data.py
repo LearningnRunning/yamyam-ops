@@ -14,10 +14,10 @@ class KakaoDinerAIData(Base, ULIDMixin):
 
     __tablename__ = "kakao_diner_ai_data"
 
-    # ForeignKey to kakao_diner.diner_idx (UNIQUE constraint)
-    diner_idx = Column(
+    # ForeignKey to kakao_diner.diner_id (UNIQUE constraint)
+    diner_id = Column(
         Integer,
-        ForeignKey("kakao_diner.diner_idx", ondelete="CASCADE"),
+        ForeignKey("kakao_diner.diner_id", ondelete="CASCADE"),
         unique=True,
         nullable=False,
         index=True,

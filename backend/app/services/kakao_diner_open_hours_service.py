@@ -46,7 +46,7 @@ class KakaoDinerOpenHoursService(
 
         return KakaoDinerOpenHoursResponse(
             id=row[0],
-            diner_idx=row[1],
+            diner_id=row[1],
             day_of_week=row[2],
             is_open=row[3],
             start_time=row[4],
@@ -56,33 +56,33 @@ class KakaoDinerOpenHoursService(
             updated_at=row[8],
         )
 
-    def get_by_diner_idx(self, diner_idx: int) -> list[KakaoDinerOpenHoursResponse]:
+    def get_by_diner_idx(self, diner_id: int) -> list[KakaoDinerOpenHoursResponse]:
         """
         특정 음식점의 영업시간 조회 (모든 요일)
 
         Args:
-            diner_idx: 음식점 인덱스
+            diner_id: 음식점 인덱스
 
         Returns:
             영업시간 목록 (요일별)
         """
         try:
             with db.get_cursor() as (cursor, conn):
-                cursor.execute(GET_KAKAO_DINER_OPEN_HOURS_BY_DINER_IDX, (diner_idx,))
+                cursor.execute(GET_KAKAO_DINER_OPEN_HOURS_BY_DINER_IDX, (diner_id,))
                 results = cursor.fetchall()
                 return [self._convert_to_response(row) for row in results]
         except Exception as e:
-            logger.warning(f"영업시간 조회 실패 (diner_idx={diner_idx}): {e}")
+            logger.warning(f"영업시간 조회 실패 (diner_id={diner_id}): {e}")
             return []
 
     def get_by_diner_and_day(
-        self, diner_idx: int, day_of_week: int
+        self, diner_id: int, day_of_week: int
     ) -> KakaoDinerOpenHoursResponse | None:
         """
         특정 음식점의 특정 요일 영업시간 조회
 
         Args:
-            diner_idx: 음식점 인덱스
+            diner_id: 음식점 인덱스
             day_of_week: 요일 (0=월요일, 6=일요일)
 
         Returns:
@@ -92,7 +92,7 @@ class KakaoDinerOpenHoursService(
             with db.get_cursor() as (cursor, conn):
                 cursor.execute(
                     GET_KAKAO_DINER_OPEN_HOURS_BY_DINER_AND_DAY,
-                    (diner_idx, day_of_week),
+                    (diner_id, day_of_week),
                 )
                 result = cursor.fetchone()
                 return self._convert_to_response(result) if result else None
@@ -100,16 +100,16 @@ class KakaoDinerOpenHoursService(
             # 영업시간 체크에서는 조회 실패 시 None 반환 (영업 중으로 간주)
             # DB 연결 오류나 데이터 없음 등은 정상적인 경우일 수 있으므로 DEBUG 레벨로만 로깅
             logger.debug(
-                f"영업시간 조회 실패 (diner_idx={diner_idx}, day={day_of_week}): {str(e)[:100]}"
+                f"영업시간 조회 실패 (diner_id={diner_id}, day={day_of_week}): {str(e)[:100]}"
             )
             return None
 
-    def is_open_at(self, diner_idx: int, check_datetime: datetime) -> bool:
+    def is_open_at(self, diner_id: int, check_datetime: datetime) -> bool:
         """
         특정 시간에 영업 중인지 판단
 
         Args:
-            diner_idx: 음식점 인덱스
+            diner_id: 음식점 인덱스
             check_datetime: 확인할 날짜시간
 
         Returns:
@@ -122,7 +122,7 @@ class KakaoDinerOpenHoursService(
             check_time = check_datetime.time()
 
             # 영업시간 조회
-            open_hours = self.get_by_diner_and_day(diner_idx, day_of_week)
+            open_hours = self.get_by_diner_and_day(diner_id, day_of_week)
 
             # 영업시간 데이터가 없으면 영업 중으로 간주
             if not open_hours:
@@ -150,25 +150,25 @@ class KakaoDinerOpenHoursService(
 
         except Exception as e:
             logger.warning(
-                f"영업시간 체크 중 오류 발생 (diner_idx={diner_idx}): {e}, 영업 중으로 간주"
+                f"영업시간 체크 중 오류 발생 (diner_id={diner_id}): {e}, 영업 중으로 간주"
             )
             # 오류 발생 시 영업 중으로 간주
             return True
 
     def filter_open_diners(
-        self, diner_idx_list: list[int], check_datetime: datetime
+        self, diner_id_list: list[int], check_datetime: datetime
     ) -> list[int]:
         """
         영업 중인 음식점만 필터링 (배치 쿼리 최적화)
 
         Args:
-            diner_idx_list: 음식점 인덱스 리스트
+            diner_id_list: 음식점 인덱스 리스트
             check_datetime: 확인할 날짜시간
 
         Returns:
             영업 중인 음식점 인덱스 리스트
         """
-        if not diner_idx_list:
+        if not diner_id_list:
             return []
 
         try:
@@ -177,38 +177,38 @@ class KakaoDinerOpenHoursService(
             check_time = check_datetime.time()
 
             # 배치 쿼리로 모든 영업시간을 한 번에 조회
-            placeholders = ",".join(["%s"] * len(diner_idx_list))
+            placeholders = ",".join(["%s"] * len(diner_id_list))
             query = f"""
-                SELECT diner_idx, is_open, start_time, end_time
+                SELECT diner_id, is_open, start_time, end_time
                 FROM kakao_diner_open_hours
-                WHERE diner_idx IN ({placeholders}) AND day_of_week = %s
+                WHERE diner_id IN ({placeholders}) AND day_of_week = %s
             """
 
             open_diners = []
             with db.get_cursor() as (cursor, conn):
-                params = list(diner_idx_list) + [day_of_week]
+                params = list(diner_id_list) + [day_of_week]
                 cursor.execute(query, params)
                 results = cursor.fetchall()
 
-                # 결과를 딕셔너리로 변환 (diner_idx -> 영업시간 정보)
+                # 결과를 딕셔너리로 변환 (diner_id -> 영업시간 정보)
                 # RealDictCursor를 사용하므로 딕셔너리 접근 가능
                 open_hours_map = {}
                 for row in results:
-                    diner_idx = row["diner_idx"]
-                    open_hours_map[diner_idx] = {
+                    diner_id = row["diner_id"]
+                    open_hours_map[diner_id] = {
                         "is_open": row["is_open"],
                         "start_time": row["start_time"],
                         "end_time": row["end_time"],
                     }
 
                 # 각 음식점의 영업시간 체크
-                for diner_idx in diner_idx_list:
-                    if diner_idx not in open_hours_map:
+                for diner_id in diner_id_list:
+                    if diner_id not in open_hours_map:
                         # 영업시간 데이터가 없으면 영업 중으로 간주
-                        open_diners.append(diner_idx)
+                        open_diners.append(diner_id)
                         continue
 
-                    hours = open_hours_map[diner_idx]
+                    hours = open_hours_map[diner_id]
 
                     # is_open이 False면 휴무일
                     if not hours["is_open"]:
@@ -216,7 +216,7 @@ class KakaoDinerOpenHoursService(
 
                     # start_time, end_time이 None이면 24시간 영업으로 간주
                     if hours["start_time"] is None or hours["end_time"] is None:
-                        open_diners.append(diner_idx)
+                        open_diners.append(diner_id)
                         continue
 
                     # 영업시간 체크
@@ -224,24 +224,24 @@ class KakaoDinerOpenHoursService(
                     if hours["start_time"] <= hours["end_time"]:
                         # 일반적인 경우 (예: 09:00 ~ 18:00)
                         if hours["start_time"] <= check_time <= hours["end_time"]:
-                            open_diners.append(diner_idx)
+                            open_diners.append(diner_id)
                     else:
                         # 자정을 넘어가는 경우 (예: 23:00 ~ 02:00)
                         if (
                             check_time >= hours["start_time"]
                             or check_time <= hours["end_time"]
                         ):
-                            open_diners.append(diner_idx)
+                            open_diners.append(diner_id)
 
             logger.info(
-                f"영업시간 필터링: {len(diner_idx_list)}개 중 {len(open_diners)}개 영업 중"
+                f"영업시간 필터링: {len(diner_id_list)}개 중 {len(open_diners)}개 영업 중"
             )
             return open_diners
 
         except Exception as e:
             logger.error(f"영업시간 필터링 중 오류 발생: {e}, 전체 반환")
             # 오류 발생 시 전체 반환
-            return diner_idx_list
+            return diner_id_list
 
     def create(
         self, data: KakaoDinerOpenHoursCreate, dry_run: bool = False
@@ -250,11 +250,11 @@ class KakaoDinerOpenHoursService(
         try:
             if dry_run:
                 logger.info(
-                    f"[DRY RUN] Creating open hours for diner_idx {data.diner_idx}"
+                    f"[DRY RUN] Creating open hours for diner_id {data.diner_id}"
                 )
                 return KakaoDinerOpenHoursResponse(
                     id="dry_run_id",
-                    diner_idx=data.diner_idx,
+                    diner_id=data.diner_id,
                     day_of_week=data.day_of_week,
                     is_open=data.is_open,
                     start_time=data.start_time,
@@ -270,7 +270,7 @@ class KakaoDinerOpenHoursService(
                     INSERT_KAKAO_DINER_OPEN_HOURS,
                     (
                         ulid,
-                        data.diner_idx,
+                        data.diner_id,
                         data.day_of_week,
                         data.is_open,
                         data.start_time,
@@ -326,10 +326,10 @@ class KakaoDinerOpenHoursService(
 
             # 기본 쿼리 (필터링 미지원, 필요시 확장 가능)
             query = """
-                SELECT id, diner_idx, day_of_week, is_open, start_time, end_time, description,
+                SELECT id, diner_id, day_of_week, is_open, start_time, end_time, description,
                        created_at, updated_at
                 FROM kakao_diner_open_hours
-                ORDER BY diner_idx, day_of_week
+                ORDER BY diner_id, day_of_week
                 LIMIT %s OFFSET %s
             """
 
@@ -364,9 +364,7 @@ class KakaoDinerOpenHoursService(
             existing = self.get_by_id(open_hours_id)
 
             # 업데이트할 값 결정 (None이면 기존 값 유지)
-            diner_idx = (
-                data.diner_idx if data.diner_idx is not None else existing.diner_idx
-            )
+            diner_id = data.diner_id if data.diner_id is not None else existing.diner_id
             day_of_week = (
                 data.day_of_week
                 if data.day_of_week is not None
@@ -387,7 +385,7 @@ class KakaoDinerOpenHoursService(
                 cursor.execute(
                     UPDATE_KAKAO_DINER_OPEN_HOURS_BY_ID,
                     (
-                        diner_idx,
+                        diner_id,
                         day_of_week,
                         is_open,
                         start_time,

@@ -10,7 +10,7 @@ from pydantic import BaseModel, Field
 class KakaoDinerAIDataCreate(BaseModel):
     """AI 데이터 생성 스키마"""
 
-    diner_idx: int = Field(..., description="음식점 고유 인덱스")
+    diner_id: int = Field(..., description="음식점 고유 인덱스")
     ai_bottom_sheet_title: str | None = Field(None, description="AI 생성 제목")
     ai_bottom_sheet_summary: str | None = Field(None, description="AI 생성 요약")
     ai_bottom_sheet_sheets: dict | list | None = Field(
@@ -24,7 +24,7 @@ class KakaoDinerAIDataCreate(BaseModel):
     class Config:
         json_schema_extra = {
             "example": {
-                "diner_idx": 1994471601,
+                "diner_id": 1994471601,
                 "ai_bottom_sheet_title": "유럽 감성 가득한 여유로운 브런치 공간",
                 "ai_bottom_sheet_summary": "감성적인 인테리어와 넓은 공간을 갖춘 브런치 카페로...",
                 "ai_bottom_sheet_sheets": [
@@ -45,7 +45,7 @@ class KakaoDinerAIDataCreate(BaseModel):
 class KakaoDinerAIDataUpdate(BaseModel):
     """AI 데이터 업데이트 스키마 (모든 필드 optional)"""
 
-    diner_idx: int | None = Field(None, description="음식점 고유 인덱스")
+    diner_id: int | None = Field(None, description="음식점 고유 인덱스")
     ai_bottom_sheet_title: str | None = Field(None, description="AI 생성 제목")
     ai_bottom_sheet_summary: str | None = Field(None, description="AI 생성 요약")
     ai_bottom_sheet_sheets: dict | list | None = Field(
@@ -61,7 +61,7 @@ class KakaoDinerAIDataResponse(BaseModel):
     """AI 데이터 응답 스키마"""
 
     id: str = Field(..., description="ULID")
-    diner_idx: int = Field(..., description="음식점 고유 인덱스")
+    diner_id: int = Field(..., description="음식점 고유 인덱스")
     ai_bottom_sheet_title: str | None = Field(None, description="AI 생성 제목")
     ai_bottom_sheet_summary: str | None = Field(None, description="AI 생성 요약")
     ai_bottom_sheet_sheets: dict | list | None = Field(
@@ -80,7 +80,7 @@ class KakaoDinerAIDataResponse(BaseModel):
         json_schema_extra = {
             "example": {
                 "id": "01HQZX9Y7ZABCDEFGHIJKLMNOP",
-                "diner_idx": 1994471601,
+                "diner_id": 1994471601,
                 "ai_bottom_sheet_title": "유럽 감성 가득한 여유로운 브런치 공간",
                 "ai_bottom_sheet_summary": "감성적인 인테리어와 넓은 공간을 갖춘 브런치 카페로...",
                 "ai_bottom_sheet_sheets": [

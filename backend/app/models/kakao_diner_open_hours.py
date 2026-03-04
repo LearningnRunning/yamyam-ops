@@ -14,9 +14,9 @@ class KakaoDinerOpenHours(Base, ULIDMixin):
 
     __tablename__ = "kakao_diner_open_hours"
 
-    diner_idx = Column(
+    diner_id = Column(
         Integer,
-        ForeignKey("kakao_diner.diner_idx", ondelete="CASCADE"),
+        ForeignKey("kakao_diner.diner_id", ondelete="CASCADE"),
         nullable=False,
         index=True,
     )
@@ -43,7 +43,7 @@ class KakaoDinerOpenHours(Base, ULIDMixin):
     def __repr__(self):
         return (
             f"<KakaoDinerOpenHours("
-            f"diner_idx={self.diner_idx}, "
+            f"diner_id={self.diner_id}, "
             f"day_of_week={self.day_of_week}, "
             f"is_open={self.is_open}, "
             f"start_time={self.start_time}, "

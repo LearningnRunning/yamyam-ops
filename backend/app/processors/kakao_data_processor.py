@@ -15,8 +15,30 @@ class KakaoDataProcessor:
     """Kakao 데이터 처리 전용 클래스 - 설정 기반 처리"""
 
     # 각 파일별 처리 설정 (필수 컬럼 + 변환 함수 + SQL 쿼리 정보)
+    # csv_to_db: CSV 파일의 구 컬럼명 → DB 신 컬럼명 매핑 (없으면 그대로 사용)
+    # required_columns: CSV 파일에서 필수로 있어야 하는 컬럼명 (CSV 기준 구 이름)
+    # field_mappings: DB에 저장할 컬럼명(신 이름)과 타입 매핑
+    # sql_fields: DB INSERT/UPDATE에 사용할 컬럼명 순서
     PROCESSING_CONFIG = {
         "diner_basic": {
+            "csv_to_db": {
+                "diner_idx": "diner_id",
+                "diner_name": "name",
+                "diner_tag": "tag",
+                "diner_menu_name": "menu_name",
+                "diner_menu_price": "menu_price",
+                "diner_review_cnt": "review_cnt",
+                "diner_review_avg": "review_avg",
+                "diner_blog_review_cnt": "blog_review_cnt",
+                "diner_review_tags": "review_tags",
+                "diner_road_address": "road_address",
+                "diner_num_address": "num_address",
+                "diner_phone": "phone",
+                "diner_lat": "lat",
+                "diner_lon": "lon",
+                "diner_open_time": "open_time",
+                "diner_grade": "grade",
+            },
             "required_columns": [
                 "diner_idx",
                 "diner_name",
@@ -30,49 +52,56 @@ class KakaoDataProcessor:
             ],
             "field_mappings": [
                 ("id", "ulid"),
-                ("diner_idx", "int"),
-                ("diner_name", "str"),
-                ("diner_tag", "list_to_comma"),
-                ("diner_menu_name", "list_to_comma"),
-                ("diner_menu_price", "list_to_comma"),
-                ("diner_review_cnt", "str"),
-                ("diner_review_avg", "float_nullable"),
-                ("diner_blog_review_cnt", "float_nullable"),
-                ("diner_review_tags", "list_to_comma"),
-                ("diner_road_address", "str"),
-                ("diner_num_address", "str"),
-                ("diner_phone", "str"),
-                ("diner_lat", "float"),
-                ("diner_lon", "float"),
-                ("diner_open_time", "str"),
-                ("diner_grade", "int_nullable"),
+                ("diner_id", "int"),
+                ("name", "str"),
+                ("tag", "list_to_comma"),
+                ("menu_name", "list_to_comma"),
+                ("menu_price", "list_to_comma"),
+                ("review_cnt", "str"),
+                ("review_avg", "float_nullable"),
+                ("blog_review_cnt", "float_nullable"),
+                ("review_tags", "list_to_comma"),
+                ("road_address", "str"),
+                ("num_address", "str"),
+                ("phone", "str"),
+                ("lat", "float"),
+                ("lon", "float"),
+                ("open_time", "str"),
+                ("grade", "int_nullable"),
                 ("hidden_score", "float_nullable"),
                 ("bayesian_score", "float_nullable"),
             ],
             "sql_fields": [
                 "id",
-                "diner_idx",
-                "diner_name",
-                "diner_tag",
-                "diner_menu_name",
-                "diner_menu_price",
-                "diner_review_cnt",
-                "diner_review_avg",
-                "diner_blog_review_cnt",
-                "diner_review_tags",
-                "diner_road_address",
-                "diner_num_address",
-                "diner_phone",
-                "diner_lat",
-                "diner_lon",
-                "diner_open_time",
-                "diner_grade",
+                "diner_id",
+                "name",
+                "tag",
+                "menu_name",
+                "menu_price",
+                "review_cnt",
+                "review_avg",
+                "blog_review_cnt",
+                "review_tags",
+                "road_address",
+                "num_address",
+                "phone",
+                "lat",
+                "lon",
+                "open_time",
+                "grade",
                 "hidden_score",
                 "bayesian_score",
             ],
             "query_name": "INSERT_KAKAO_DINER_BASIC",
         },
         "diner_categories": {
+            "csv_to_db": {
+                "diner_idx": "diner_id",
+                "diner_category_large": "category_large",
+                "diner_category_middle": "category_middle",
+                "diner_category_small": "category_small",
+                "diner_category_detail": "category_detail",
+            },
             "required_columns": [
                 "diner_idx",
                 "diner_category_large",
@@ -81,32 +110,43 @@ class KakaoDataProcessor:
                 "diner_category_detail",
             ],
             "field_mappings": [
-                ("diner_category_large", "str"),
-                ("diner_category_middle", "str"),
-                ("diner_category_small", "str"),
-                ("diner_category_detail", "str"),
-                ("diner_idx", "int"),
+                ("category_large", "str"),
+                ("category_middle", "str"),
+                ("category_small", "str"),
+                ("category_detail", "str"),
+                ("diner_id", "int"),
             ],
             "sql_fields": [
-                "diner_category_large",
-                "diner_category_middle",
-                "diner_category_small",
-                "diner_category_detail",
-                "diner_idx",
+                "category_large",
+                "category_middle",
+                "category_small",
+                "category_detail",
+                "diner_id",
             ],
             "query_name": "UPDATE_KAKAO_DINER_CATEGORY",
         },
         "diner_menus": {
+            "csv_to_db": {
+                "diner_idx": "diner_id",
+                "diner_menu_name": "menu_name",
+                "diner_menu_price": "menu_price",
+            },
             "required_columns": ["diner_idx", "diner_menu_name", "diner_menu_price"],
             "field_mappings": [
-                ("diner_menu_name", "str"),
-                ("diner_idx", "int"),
-                ("diner_menu_price", "str"),
+                ("menu_name", "str"),
+                ("diner_id", "int"),
+                ("menu_price", "str"),
             ],
-            "sql_fields": ["diner_menu_name", "diner_idx", "diner_menu_price"],
+            "sql_fields": ["menu_name", "diner_id", "menu_price"],
             "query_name": "UPDATE_KAKAO_DINER_MENU",
         },
         "diner_reviews": {
+            "csv_to_db": {
+                "diner_idx": "diner_id",
+                "diner_review_cnt": "review_cnt",
+                "diner_review_avg": "review_avg",
+                "diner_blog_review_cnt": "blog_review_cnt",
+            },
             "required_columns": [
                 "diner_idx",
                 "diner_review_cnt",
@@ -114,30 +154,40 @@ class KakaoDataProcessor:
                 "diner_blog_review_cnt",
             ],
             "field_mappings": [
-                ("diner_review_cnt", "int_default_zero"),
-                ("diner_review_avg", "float_default_zero"),
-                ("diner_blog_review_cnt", "float_default_zero"),
-                ("diner_idx", "int"),
+                ("review_cnt", "int_default_zero"),
+                ("review_avg", "float_default_zero"),
+                ("blog_review_cnt", "float_default_zero"),
+                ("diner_id", "int"),
             ],
             "sql_fields": [
-                "diner_review_cnt",
-                "diner_review_avg",
-                "diner_blog_review_cnt",
-                "diner_idx",
+                "review_cnt",
+                "review_avg",
+                "blog_review_cnt",
+                "diner_id",
             ],
             "query_name": "UPDATE_KAKAO_DINER_REVIEW",
         },
         "diner_tags": {
+            "csv_to_db": {
+                "diner_idx": "diner_id",
+                "diner_tag": "tag",
+                "diner_review_tags": "review_tags",
+            },
             "required_columns": ["diner_idx", "diner_tag", "diner_review_tags"],
             "field_mappings": [
-                ("diner_tag", "str"),
-                ("diner_review_tags", "str"),
-                ("diner_idx", "int"),
+                ("tag", "str"),
+                ("review_tags", "str"),
+                ("diner_id", "int"),
             ],
-            "sql_fields": ["diner_tag", "diner_review_tags", "diner_idx"],
+            "sql_fields": ["tag", "review_tags", "diner_id"],
             "query_name": "UPDATE_KAKAO_DINER_TAGS",
         },
         "reviewers": {
+            "csv_to_db": {
+                "reviewer_user_name": "user_name",
+                "reviewer_review_cnt": "review_cnt",
+                "reviewer_avg": "avg",
+            },
             "required_columns": [
                 "reviewer_id",
                 "reviewer_review_cnt",
@@ -148,24 +198,30 @@ class KakaoDataProcessor:
             "field_mappings": [
                 ("id", "ulid"),
                 ("reviewer_id", "int"),
-                ("reviewer_user_name", "str"),
-                ("reviewer_review_cnt", "int"),
-                ("reviewer_avg", "float"),
+                ("user_name", "str"),
+                ("review_cnt", "int"),
+                ("avg", "float"),
                 ("badge_grade", "str"),
                 ("badge_level", "int"),
             ],
             "sql_fields": [
                 "id",
                 "reviewer_id",
-                "reviewer_user_name",
-                "reviewer_review_cnt",
-                "reviewer_avg",
+                "user_name",
+                "review_cnt",
+                "avg",
                 "badge_grade",
                 "badge_level",
             ],
             "query_name": "INSERT_KAKAO_REVIEWER",
         },
         "reviews": {
+            "csv_to_db": {
+                "diner_idx": "diner_id",
+                "reviewer_review": "text",
+                "reviewer_review_date": "date",
+                "reviewer_review_score": "star",
+            },
             "required_columns": [
                 "diner_idx",
                 "reviewer_id",
@@ -174,25 +230,34 @@ class KakaoDataProcessor:
             ],
             "field_mappings": [
                 ("id", "ulid"),
-                ("diner_idx", "int"),
+                ("diner_id", "int"),
                 ("reviewer_id", "int"),
                 ("review_id", "int"),
-                ("reviewer_review", "str_optional"),
-                ("reviewer_review_date", "date_str"),
-                ("reviewer_review_score", "float"),
+                ("text", "str_optional"),
+                ("date", "date_str"),
+                ("star", "float"),
+                ("near", "bool_nullable"),
+                ("is_place_owner_pick", "bool_nullable"),
+                ("like_count", "int_nullable"),
+                ("photo_count", "int_nullable"),
             ],
             "sql_fields": [
                 "id",
-                "diner_idx",
+                "diner_id",
                 "reviewer_id",
                 "review_id",
-                "reviewer_review",
-                "reviewer_review_date",
-                "reviewer_review_score",
+                "text",
+                "date",
+                "star",
+                "near",
+                "is_place_owner_pick",
+                "like_count",
+                "photo_count",
             ],
             "query_name": "INSERT_KAKAO_REVIEW",
         },
         "review_photos": {
+            "csv_to_db": {},
             "required_columns": [
                 "review_id",
                 "photo_url",
@@ -220,39 +285,49 @@ class KakaoDataProcessor:
             "query_name": "INSERT_REVIEW_PHOTO",
         },
         "diner_grade_bayesian": {
+            "csv_to_db": {
+                "diner_idx": "diner_id",
+                "diner_grade": "grade",
+            },
             "required_columns": [
                 "diner_idx",
                 "diner_grade",
                 "bayesian_score",
             ],
             "field_mappings": [
-                ("diner_grade", "int"),
+                ("grade", "int"),
                 ("bayesian_score", "float"),
-                ("diner_idx", "int"),
+                ("diner_id", "int"),
             ],
             "sql_fields": [
-                "diner_grade",
+                "grade",
                 "bayesian_score",
-                "diner_idx",
+                "diner_id",
             ],
             "query_name": "UPDATE_KAKAO_DINER_GRADE_BAYESIAN",
         },
         "diner_hidden_score": {
+            "csv_to_db": {
+                "diner_idx": "diner_id",
+            },
             "required_columns": [
                 "diner_idx",
                 "hidden_score",
             ],
             "field_mappings": [
                 ("hidden_score", "float"),
-                ("diner_idx", "int"),
+                ("diner_id", "int"),
             ],
             "sql_fields": [
                 "hidden_score",
-                "diner_idx",
+                "diner_id",
             ],
             "query_name": "UPDATE_KAKAO_DINER_HIDDEN_SCORE",
         },
         "diner_open_hours": {
+            "csv_to_db": {
+                "diner_idx": "diner_id",
+            },
             "required_columns": [
                 "diner_idx",
                 "day_of_week",
@@ -260,7 +335,7 @@ class KakaoDataProcessor:
             ],
             "field_mappings": [
                 ("id", "ulid"),
-                ("diner_idx", "int"),
+                ("diner_id", "int"),
                 ("day_of_week", "int"),
                 ("is_open", "bool"),
                 ("start_time", "time_str"),
@@ -269,7 +344,7 @@ class KakaoDataProcessor:
             ],
             "sql_fields": [
                 "id",
-                "diner_idx",
+                "diner_id",
                 "day_of_week",
                 "is_open",
                 "start_time",
@@ -279,6 +354,9 @@ class KakaoDataProcessor:
             "query_name": "INSERT_KAKAO_DINER_OPEN_HOURS",
         },
         "diner_menus_new": {
+            "csv_to_db": {
+                "diner_idx": "diner_id",
+            },
             "required_columns": [
                 "diner_idx",
                 "name",
@@ -286,7 +364,7 @@ class KakaoDataProcessor:
             ],
             "field_mappings": [
                 ("id", "ulid"),
-                ("diner_idx", "int"),
+                ("diner_id", "int"),
                 ("name", "str"),
                 ("product_id", "str"),
                 ("price", "float_nullable"),
@@ -298,7 +376,7 @@ class KakaoDataProcessor:
             ],
             "sql_fields": [
                 "id",
-                "diner_idx",
+                "diner_id",
                 "name",
                 "product_id",
                 "price",
@@ -311,12 +389,15 @@ class KakaoDataProcessor:
             "query_name": "INSERT_KAKAO_DINER_MENU",
         },
         "diner_ai_data": {
+            "csv_to_db": {
+                "diner_idx": "diner_id",
+            },
             "required_columns": [
                 "diner_idx",
             ],
             "field_mappings": [
                 ("id", "ulid"),
-                ("diner_idx", "int"),
+                ("diner_id", "int"),
                 ("ai_bottom_sheet_title", "str_optional"),
                 ("ai_bottom_sheet_summary", "str_optional"),
                 ("ai_bottom_sheet_sheets", "json_str"),
@@ -326,7 +407,7 @@ class KakaoDataProcessor:
             ],
             "sql_fields": [
                 "id",
-                "diner_idx",
+                "diner_id",
                 "ai_bottom_sheet_title",
                 "ai_bottom_sheet_summary",
                 "ai_bottom_sheet_sheets",
@@ -527,7 +608,7 @@ class KakaoDataProcessor:
 
             if file_type == "diner_basic":
                 table_name = "kakao_diner"
-                conflict_field = "diner_idx"
+                conflict_field = "diner_id"
                 update_fields = [f for f in sql_fields if f != conflict_field]
                 update_clause = ", ".join(
                     [f"{field} = EXCLUDED.{field}" for field in update_fields]
@@ -548,25 +629,25 @@ class KakaoDataProcessor:
             # UPDATE 쿼리 생성
             if file_type == "diner_categories":
                 update_fields = [
-                    "diner_category_large",
-                    "diner_category_middle",
-                    "diner_category_small",
-                    "diner_category_detail",
+                    "category_large",
+                    "category_middle",
+                    "category_small",
+                    "category_detail",
                 ]
-                where_field = "diner_idx"
+                where_field = "diner_id"
             elif file_type == "diner_menus":
-                update_fields = ["diner_menu_name", "diner_menu_price"]
-                where_field = "diner_idx"
+                update_fields = ["menu_name", "menu_price"]
+                where_field = "diner_id"
             elif file_type == "diner_reviews":
                 update_fields = [
-                    "diner_review_cnt",
-                    "diner_review_avg",
-                    "diner_blog_review_cnt",
+                    "review_cnt",
+                    "review_avg",
+                    "blog_review_cnt",
                 ]
-                where_field = "diner_idx"
+                where_field = "diner_id"
             elif file_type == "diner_tags":
-                update_fields = ["diner_tag", "diner_review_tags"]
-                where_field = "diner_idx"
+                update_fields = ["tag", "review_tags"]
+                where_field = "diner_id"
             else:
                 raise ValueError(f"지원하지 않는 UPDATE 타입: {file_type}")
 
@@ -639,6 +720,14 @@ class KakaoDataProcessor:
         config = cls.PROCESSING_CONFIG[file_type]
         field_mappings = config["field_mappings"]
         required_columns = config.get("required_columns", [])
+        csv_to_db = config.get("csv_to_db", {})
+
+        # CSV 컬럼명을 DB 컬럼명으로 rename (구 이름 → 신 이름)
+        if csv_to_db:
+            df = df.rename(columns=csv_to_db)
+
+        # required_columns도 신 이름으로 변환 (검증용)
+        required_db_columns = [csv_to_db.get(col, col) for col in required_columns]
 
         data = []
         for row_idx, (_, row) in enumerate(df.iterrows()):
@@ -667,7 +756,7 @@ class KakaoDataProcessor:
 
                 # 필수 컬럼이 아닌 경우, CSV에 없으면 None 반환
                 if field_name not in row:
-                    if field_name in required_columns:
+                    if field_name in required_db_columns:
                         raise ValueError(
                             f"필수 컬럼 '{field_name}'이 DataFrame에 없습니다"
                         )

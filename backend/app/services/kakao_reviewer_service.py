@@ -38,9 +38,9 @@ class KakaoReviewerService(
                     INSERT_KAKAO_REVIEWER,
                     (
                         data.reviewer_id,
-                        data.reviewer_user_name,
-                        data.reviewer_review_cnt,
-                        data.reviewer_avg,
+                        data.user_name,
+                        data.review_cnt,
+                        data.avg,
                         data.badge_grade,
                         data.badge_level,
                     ),
@@ -79,9 +79,9 @@ class KakaoReviewerService(
             fields = [
                 "id",
                 "reviewer_id",
-                "reviewer_user_name",
-                "reviewer_review_cnt",
-                "reviewer_avg",
+                "user_name",
+                "review_cnt",
+                "avg",
                 "badge_grade",
                 "badge_level",
                 "crawled_at",
@@ -92,7 +92,7 @@ class KakaoReviewerService(
             params = []
 
             if min_review_count is not None:
-                conditions.append("reviewer_review_cnt >= %s")
+                conditions.append("review_cnt >= %s")
                 params.append(min_review_count)
 
             if is_verified is not None:
@@ -102,7 +102,7 @@ class KakaoReviewerService(
             query, query_params = self._build_select_query(
                 fields,
                 conditions,
-                order_by="reviewer_review_cnt DESC, reviewer_avg DESC",
+                order_by="review_cnt DESC, avg DESC",
                 limit=limit,
                 offset=skip,
             )
@@ -141,9 +141,9 @@ class KakaoReviewerService(
         # 업데이트할 필드와 값 구성
         update_values = []
         field_mapping = {
-            "reviewer_user_name": data.reviewer_user_name,
-            "reviewer_review_cnt": data.reviewer_review_cnt,
-            "reviewer_avg": data.reviewer_avg,
+            "user_name": data.user_name,
+            "review_cnt": data.review_cnt,
+            "avg": data.avg,
             "badge_grade": data.badge_grade,
             "badge_level": data.badge_level,
         }
@@ -174,9 +174,9 @@ class KakaoReviewerService(
         return KakaoReviewerResponse(
             id=row["id"],
             reviewer_id=row["reviewer_id"],
-            reviewer_user_name=row.get("reviewer_user_name"),
-            reviewer_review_cnt=row["reviewer_review_cnt"],
-            reviewer_avg=row["reviewer_avg"],
+            user_name=row.get("user_name"),
+            review_cnt=row["review_cnt"],
+            avg=row["avg"],
             badge_grade=row["badge_grade"],
             badge_level=row["badge_level"],
             crawled_at=row["crawled_at"].isoformat(),

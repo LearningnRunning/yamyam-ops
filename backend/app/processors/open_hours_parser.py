@@ -88,7 +88,7 @@ def parse_open_hours(diner_idx: int, open_hours_data: Any) -> list[dict]:
 
     Returns:
         [{
-            'diner_idx': int,
+            'diner_id': int,
             'day_of_week': int,
             'is_open': bool,
             'start_time': str | None,  # 'HH:MM:SS' 형식
@@ -158,7 +158,7 @@ def parse_open_hours(diner_idx: int, open_hours_data: Any) -> list[dict]:
 
                     results.append(
                         {
-                            "diner_idx": diner_idx,
+                            "diner_id": diner_idx,
                             "day_of_week": day_of_week,
                             "is_open": True,
                             "start_time": start_time_str,
@@ -172,7 +172,7 @@ def parse_open_hours(diner_idx: int, open_hours_data: Any) -> list[dict]:
                     off_desc = day["off_days_desc"]
                     results.append(
                         {
-                            "diner_idx": diner_idx,
+                            "diner_id": diner_idx,
                             "day_of_week": day_of_week,
                             "is_open": False,
                             "start_time": None,

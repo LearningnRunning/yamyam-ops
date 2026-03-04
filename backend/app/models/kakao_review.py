@@ -1,4 +1,13 @@
-from sqlalchemy import Column, DateTime, Float, ForeignKey, Integer, String, Text
+from sqlalchemy import (
+    Boolean,
+    Column,
+    DateTime,
+    Float,
+    ForeignKey,
+    Integer,
+    String,
+    Text,
+)
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 
@@ -8,16 +17,20 @@ from .base import Base, ULIDMixin
 class KakaoReview(Base, ULIDMixin):
     __tablename__ = "kakao_review"
 
-    diner_idx = Column(
-        Integer, ForeignKey("kakao_diner.diner_idx"), nullable=False, index=True
+    diner_id = Column(
+        Integer, ForeignKey("kakao_diner.diner_id"), nullable=False, index=True
     )
     reviewer_id = Column(
         String, ForeignKey("kakao_reviewer.reviewer_id"), nullable=False, index=True
     )
     review_id = Column(String, unique=True, nullable=False, index=True)
-    reviewer_review = Column(Text)
-    reviewer_review_date = Column(String(50))
-    reviewer_review_score = Column(Float, nullable=False)
+    text = Column(Text)
+    date = Column(String(50))
+    star = Column(Float, nullable=False)
+    near = Column(Boolean)
+    is_place_owner_pick = Column(Boolean)
+    like_count = Column(Integer)
+    photo_count = Column(Integer)
     crawled_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(
         DateTime(timezone=True), server_default=func.now(), onupdate=func.now()

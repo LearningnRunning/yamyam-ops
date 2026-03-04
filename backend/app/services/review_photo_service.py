@@ -16,8 +16,8 @@ GET_TOP_REVIEWER_PHOTO_BY_DINER = """
     FROM review_photos rp
     JOIN kakao_review kr ON rp.review_id = kr.review_id
     JOIN kakao_reviewer krev ON kr.reviewer_id = krev.reviewer_id
-    WHERE kr.diner_idx = %s
-    ORDER BY rp.view_count DESC, krev.reviewer_review_cnt DESC, rp.display_order ASC
+    WHERE kr.diner_id = %s
+    ORDER BY rp.view_count DESC, krev.review_cnt DESC, rp.display_order ASC
     LIMIT 1
 """
 
@@ -26,7 +26,7 @@ GET_PHOTOS_BY_DINER_IDX = """
            rp.media_type, rp.status, rp.display_order, rp.view_count, rp.created_at
     FROM review_photos rp
     JOIN kakao_review kr ON rp.review_id = kr.review_id
-    WHERE kr.diner_idx = %s
+    WHERE kr.diner_id = %s
     ORDER BY rp.display_order ASC
 """
 
@@ -103,8 +103,8 @@ class ReviewPhotoService(BaseService):
                 FROM review_photos rp
                 JOIN kakao_review kr ON rp.review_id = kr.review_id
                 JOIN kakao_reviewer krev ON kr.reviewer_id = krev.reviewer_id
-                WHERE kr.diner_idx = %s
-                ORDER BY rp.view_count DESC, krev.reviewer_review_cnt DESC, rp.display_order ASC
+                WHERE kr.diner_id = %s
+                ORDER BY rp.view_count DESC, krev.review_cnt DESC, rp.display_order ASC
                 LIMIT %s
             """
             logger.debug(f"상위 {limit}개 이미지 조회: diner_idx={diner_idx}")

@@ -23,9 +23,9 @@ class KakaoDinerMenu(Base, ULIDMixin):
 
     __tablename__ = "kakao_diner_menus"
 
-    diner_idx = Column(
+    diner_id = Column(
         Integer,
-        ForeignKey("kakao_diner.diner_idx", ondelete="CASCADE"),
+        ForeignKey("kakao_diner.diner_id", ondelete="CASCADE"),
         nullable=False,
         index=True,
     )
@@ -48,7 +48,7 @@ class KakaoDinerMenu(Base, ULIDMixin):
     def __repr__(self):
         return (
             f"<KakaoDinerMenu("
-            f"diner_idx={self.diner_idx}, "
+            f"diner_id={self.diner_id}, "
             f"name={self.name}, "
             f"product_id={self.product_id})>"
         )

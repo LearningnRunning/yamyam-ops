@@ -44,7 +44,7 @@ class KakaoReviewService(
                 # 음식점 존재 확인
                 if not self._check_exists(
                     CHECK_KAKAO_DINER_EXISTS_BY_IDX,
-                    (data.diner_idx,),
+                    (data.diner_id,),
                 ):
                     raise HTTPException(
                         status_code=status.HTTP_404_NOT_FOUND,
@@ -64,12 +64,16 @@ class KakaoReviewService(
                 cursor.execute(
                     INSERT_KAKAO_REVIEW,
                     (
-                        data.diner_idx,
+                        data.diner_id,
                         data.reviewer_id,
                         data.review_id,
-                        data.reviewer_review,
-                        data.reviewer_review_date,
-                        data.reviewer_review_score,
+                        data.text,
+                        data.date,
+                        data.star,
+                        data.near,
+                        data.is_place_owner_pick,
+                        data.like_count,
+                        data.photo_count,
                     ),
                 )
 
@@ -96,7 +100,7 @@ class KakaoReviewService(
         self,
         skip: Optional[int] = None,
         limit: Optional[int] = None,
-        diner_idx: Optional[int] = None,
+        diner_id: Optional[int] = None,
         reviewer_id: Optional[int] = None,
         min_rating: Optional[float] = None,
         lower_datetime: Optional[str] = None,
@@ -113,7 +117,7 @@ class KakaoReviewService(
 
         # 필터링이나 페이지네이션이 필요한 경우 동적 쿼리 사용
         if (
-            diner_idx
+            diner_id
             or reviewer_id
             or min_rating is not None
             or lower_datetime
@@ -124,30 +128,30 @@ class KakaoReviewService(
             conditions = []
             params = []
 
-            if diner_idx:
-                conditions.append("kr.diner_idx = %s")
-                params.append(diner_idx)
+            if diner_id:
+                conditions.append("kr.diner_id = %s")
+                params.append(diner_id)
 
             if reviewer_id:
                 conditions.append("kr.reviewer_id = %s")
                 params.append(reviewer_id)
 
             if min_rating is not None:
-                conditions.append("kr.reviewer_review_score >= %s")
+                conditions.append("kr.star >= %s")
                 params.append(min_rating)
 
             if lower_datetime:
-                conditions.append("kr.reviewer_review_date >= %s")
+                conditions.append("kr.date >= %s")
                 params.append(lower_datetime)
 
             if upper_datetime:
-                conditions.append("kr.reviewer_review_date <= %s")
+                conditions.append("kr.date <= %s")
                 params.append(upper_datetime)
 
             if conditions:
                 query += " WHERE " + " AND ".join(conditions)
 
-            query += " ORDER BY kr.reviewer_review_score DESC, kr.crawled_at DESC"
+            query += " ORDER BY kr.star DESC, kr.crawled_at DESC"
 
             if limit:
                 query += " LIMIT %s "
@@ -187,9 +191,9 @@ class KakaoReviewService(
         # 업데이트할 필드와 값 구성
         update_values = []
         field_mapping = {
-            "reviewer_review": data.reviewer_review,
-            "reviewer_review_date": data.reviewer_review_date,
-            "reviewer_review_score": data.reviewer_review_score,
+            "text": data.text,
+            "date": data.date,
+            "star": data.star,
         }
 
         for field, value in field_mapping.items():
@@ -217,13 +221,16 @@ class KakaoReviewService(
         """데이터베이스 행을 응답 모델로 변환"""
         return KakaoReviewResponse(
             id=row["id"],
-            kakao_review_id=row["review_id"],
-            diner_idx=row["diner_idx"],
+            diner_id=row["diner_id"],
             reviewer_id=row["reviewer_id"],
             review_id=row["review_id"],
-            reviewer_review=row.get("reviewer_review"),
-            reviewer_review_date=row.get("reviewer_review_date"),
-            reviewer_review_score=row["reviewer_review_score"],
+            text=row.get("text"),
+            date=row.get("date"),
+            star=row["star"],
+            near=row.get("near"),
+            is_place_owner_pick=row.get("is_place_owner_pick"),
+            like_count=row.get("like_count"),
+            photo_count=row.get("photo_count"),
             crawled_at=row["crawled_at"].isoformat(),
             updated_at=row["updated_at"].isoformat(),
         )
@@ -232,18 +239,21 @@ class KakaoReviewService(
         """데이터베이스 행을 상세 응답 모델로 변환"""
         return KakaoReviewWithDetails(
             id=row["id"],
-            kakao_review_id=row["review_id"],
-            diner_idx=row["diner_idx"],
+            diner_id=row["diner_id"],
             reviewer_id=row["reviewer_id"],
             review_id=row["review_id"],
-            reviewer_review=row.get("reviewer_review"),
-            reviewer_review_date=row.get("reviewer_review_date"),
-            reviewer_review_score=row["reviewer_review_score"],
+            text=row.get("text"),
+            date=row.get("date"),
+            star=row["star"],
+            near=row.get("near"),
+            is_place_owner_pick=row.get("is_place_owner_pick"),
+            like_count=row.get("like_count"),
+            photo_count=row.get("photo_count"),
             crawled_at=row["crawled_at"].isoformat(),
             updated_at=row["updated_at"].isoformat(),
-            diner_name=row.get("diner_name"),
-            diner_tag=row.get("diner_tag"),
-            reviewer_user_name=row.get("reviewer_user_name"),
+            name=row.get("name"),
+            tag=row.get("tag"),
+            user_name=row.get("user_name"),
         )
 
     @staticmethod

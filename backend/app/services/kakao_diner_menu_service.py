@@ -45,7 +45,7 @@ class KakaoDinerMenuService(
                 logger.info(f"[DRY RUN] Creating menu: {data.name}")
                 return KakaoDinerMenuResponse(
                     id="dry_run_id",
-                    diner_idx=data.diner_idx,
+                    diner_id=data.diner_id,
                     name=data.name,
                     product_id=data.product_id,
                     price=data.price,
@@ -64,7 +64,7 @@ class KakaoDinerMenuService(
                     INSERT_KAKAO_DINER_MENU,
                     (
                         ulid,
-                        data.diner_idx,
+                        data.diner_id,
                         data.name,
                         data.product_id,
                         data.price,
@@ -112,7 +112,7 @@ class KakaoDinerMenuService(
 
     def get_list(
         self,
-        diner_idx: int | None = None,
+        diner_id: int | None = None,
         is_recommend: bool | None = None,
         is_ai_mate: bool | None = None,
         limit: int | None = None,
@@ -124,15 +124,15 @@ class KakaoDinerMenuService(
         try:
             if dry_run:
                 logger.info(
-                    f"[DRY RUN] Getting menu list with filters: diner_idx={diner_idx}, "
+                    f"[DRY RUN] Getting menu list with filters: diner_id={diner_id}, "
                     f"is_recommend={is_recommend}, is_ai_mate={is_ai_mate}"
                 )
                 return []
 
-            # diner_idx가 지정된 경우 최적화된 쿼리 사용
-            if diner_idx is not None and is_recommend is None and is_ai_mate is None:
+            # diner_id가 지정된 경우 최적화된 쿼리 사용
+            if diner_id is not None and is_recommend is None and is_ai_mate is None:
                 with db.get_cursor() as (cursor, conn):
-                    cursor.execute(GET_KAKAO_DINER_MENUS_BY_DINER_IDX, (diner_idx,))
+                    cursor.execute(GET_KAKAO_DINER_MENUS_BY_DINER_IDX, (diner_id,))
                     results = cursor.fetchall()
                     return [self._convert_to_response(row) for row in results]
 
@@ -141,9 +141,9 @@ class KakaoDinerMenuService(
             conditions = []
             params = []
 
-            if diner_idx is not None:
-                conditions.append("diner_idx = %s")
-                params.append(diner_idx)
+            if diner_id is not None:
+                conditions.append("diner_id = %s")
+                params.append(diner_id)
 
             if is_recommend is not None:
                 conditions.append("is_recommend = %s")
@@ -190,9 +190,9 @@ class KakaoDinerMenuService(
 
             # 업데이트할 필드 결정 (None이 아닌 값만)
             update_data = {
-                "diner_idx": data.diner_idx
-                if data.diner_idx is not None
-                else existing_menu.diner_idx,
+                "diner_id": data.diner_id
+                if data.diner_id is not None
+                else existing_menu.diner_id,
                 "name": data.name if data.name is not None else existing_menu.name,
                 "product_id": data.product_id
                 if data.product_id is not None
@@ -217,7 +217,7 @@ class KakaoDinerMenuService(
                 cursor.execute(
                     UPDATE_KAKAO_DINER_MENU_BY_ID,
                     (
-                        update_data["diner_idx"],
+                        update_data["diner_id"],
                         update_data["name"],
                         update_data["product_id"],
                         update_data["price"],
@@ -270,12 +270,12 @@ class KakaoDinerMenuService(
         except Exception as e:
             self._handle_exception("deleting kakao diner menu", e)
 
-    def get_count(self, diner_idx: int | None = None) -> int:
+    def get_count(self, diner_id: int | None = None) -> int:
         """메뉴 개수 조회"""
         try:
             with db.get_cursor() as (cursor, conn):
-                if diner_idx is not None:
-                    cursor.execute(COUNT_KAKAO_DINER_MENUS_BY_DINER_IDX, (diner_idx,))
+                if diner_id is not None:
+                    cursor.execute(COUNT_KAKAO_DINER_MENUS_BY_DINER_IDX, (diner_id,))
                 else:
                     cursor.execute(COUNT_KAKAO_DINER_MENUS)
                 result = cursor.fetchone()
@@ -288,7 +288,7 @@ class KakaoDinerMenuService(
         """데이터베이스 행을 응답 모델로 변환"""
         return KakaoDinerMenuResponse(
             id=row["id"],
-            diner_idx=row["diner_idx"],
+            diner_id=row["diner_id"],
             name=row["name"],
             product_id=row["product_id"],
             price=row["price"],

@@ -10,7 +10,7 @@ from pydantic import BaseModel, Field
 class KakaoDinerMenuBase(BaseModel):
     """메뉴 기본 스키마"""
 
-    diner_idx: int = Field(..., description="카카오 음식점 고유 인덱스")
+    diner_id: int = Field(..., description="카카오 음식점 고유 인덱스")
     name: str = Field(..., min_length=1, max_length=255, description="메뉴 이름")
     product_id: str = Field(..., min_length=1, max_length=255, description="상품 ID")
     price: float | None = Field(None, ge=0, description="가격")
@@ -30,7 +30,7 @@ class KakaoDinerMenuCreate(KakaoDinerMenuBase):
 class KakaoDinerMenuUpdate(BaseModel):
     """메뉴 업데이트 스키마 (모든 필드 optional)"""
 
-    diner_idx: int | None = Field(None, description="카카오 음식점 고유 인덱스")
+    diner_id: int | None = Field(None, description="카카오 음식점 고유 인덱스")
     name: str | None = Field(
         None, min_length=1, max_length=255, description="메뉴 이름"
     )

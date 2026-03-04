@@ -37,7 +37,7 @@ def create_review(review: KakaoReviewCreate):
 def list_reviews(
     skip: int = Query(0, ge=0),
     limit: int = Query(100, ge=1, le=1000),
-    diner_idx: int | None = None,
+    diner_id: int | None = None,
     reviewer_id: int | None = None,
     min_rating: float | None = None,
 ):
@@ -45,7 +45,7 @@ def list_reviews(
     return review_service.get_list(
         skip=skip,
         limit=limit,
-        diner_idx=diner_idx,
+        diner_id=diner_id,
         reviewer_id=reviewer_id,
         min_rating=min_rating,
     )

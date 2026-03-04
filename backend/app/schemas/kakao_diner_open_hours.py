@@ -10,7 +10,7 @@ from pydantic import BaseModel, Field
 class KakaoDinerOpenHoursBase(BaseModel):
     """영업시간 기본 스키마"""
 
-    diner_idx: int = Field(..., description="카카오 음식점 고유 인덱스")
+    diner_id: int = Field(..., description="카카오 음식점 고유 인덱스")
     day_of_week: int = Field(..., ge=0, le=6, description="요일 (0=월요일, 6=일요일)")
     is_open: bool = Field(True, description="영업 여부")
     start_time: time | None = Field(None, description="영업 시작 시간")
@@ -29,7 +29,7 @@ class KakaoDinerOpenHoursCreate(KakaoDinerOpenHoursBase):
 class KakaoDinerOpenHoursUpdate(BaseModel):
     """영업시간 업데이트 스키마 (모든 필드 optional)"""
 
-    diner_idx: int | None = Field(None, description="카카오 음식점 고유 인덱스")
+    diner_id: int | None = Field(None, description="카카오 음식점 고유 인덱스")
     day_of_week: int | None = Field(
         None, ge=0, le=6, description="요일 (0=월요일, 6=일요일)"
     )

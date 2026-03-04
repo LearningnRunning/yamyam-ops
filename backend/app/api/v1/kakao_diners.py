@@ -54,16 +54,16 @@ def filter_restaurants(
         description="반환할 최대 레코드 수 (top-k), None이면 전체 반환",
     ),
     offset: int | None = Query(None, ge=0, description="페이지네이션 오프셋"),
-    diner_category_large: list[str] | None = Query(
+    category_large: list[str] | None = Query(
         None, description="대분류 카테고리 (여러 개 가능)"
     ),
-    diner_category_middle: list[str] | None = Query(
+    category_middle: list[str] | None = Query(
         None, description="중분류 카테고리 (여러 개 가능)"
     ),
-    diner_category_small: list[str] | None = Query(
+    category_small: list[str] | None = Query(
         None, description="소분류 카테고리 (여러 개 가능)"
     ),
-    diner_category_detail: list[str] | None = Query(
+    category_detail: list[str] | None = Query(
         None, description="세부 카테고리 (여러 개 가능)"
     ),
     min_review_count: int | None = Query(None, ge=0, description="최소 리뷰 개수"),
@@ -115,10 +115,10 @@ def filter_restaurants(
     return diner_service.get_list_filtered(
         limit=limit,
         offset=offset,
-        diner_category_large=diner_category_large,
-        diner_category_middle=diner_category_middle,
-        diner_category_small=diner_category_small,
-        diner_category_detail=diner_category_detail,
+        category_large=category_large,
+        category_middle=category_middle,
+        category_small=category_small,
+        category_detail=category_detail,
         min_review_count=min_review_count,
         user_lat=user_lat,
         user_lon=user_lon,
@@ -184,16 +184,16 @@ def list_restaurants(
         description="반환할 최대 레코드 수 (top-k), None이면 전체 반환",
     ),
     offset: int | None = Query(None, ge=0, description="페이지네이션 오프셋"),
-    diner_category_large: list[str] | None = Query(
+    category_large: list[str] | None = Query(
         None, description="대분류 카테고리 (여러 개 가능)"
     ),
-    diner_category_middle: list[str] | None = Query(
+    category_middle: list[str] | None = Query(
         None, description="중분류 카테고리 (여러 개 가능)"
     ),
-    diner_category_small: list[str] | None = Query(
+    category_small: list[str] | None = Query(
         None, description="소분류 카테고리 (여러 개 가능)"
     ),
-    diner_category_detail: list[str] | None = Query(
+    category_detail: list[str] | None = Query(
         None, description="세부 카테고리 (여러 개 가능)"
     ),
     min_review_count: int | None = Query(None, ge=0, description="최소 리뷰 개수"),
@@ -241,10 +241,10 @@ def list_restaurants(
     return diner_service.get_list(
         limit=limit,
         offset=offset,
-        diner_category_large=diner_category_large,
-        diner_category_middle=diner_category_middle,
-        diner_category_small=diner_category_small,
-        diner_category_detail=diner_category_detail,
+        category_large=category_large,
+        category_middle=category_middle,
+        category_small=category_small,
+        category_detail=category_detail,
         min_review_count=min_review_count,
         user_lat=user_lat,
         user_lon=user_lon,
@@ -401,10 +401,10 @@ def get_restaurant_menus(
     - limit: 최대 반환 개수
     - offset: 건너뛸 개수
     """
-    # kakao_place_id는 ULID이므로 먼저 음식점 정보를 조회하여 diner_idx를 얻음
+    # kakao_place_id는 ULID이므로 먼저 음식점 정보를 조회하여 diner_id를 얻음
     diner = diner_service.get_by_id(kakao_place_id)
     return menu_service.get_list(
-        diner_idx=diner.diner_idx,
+        diner_id=diner.diner_id,
         is_recommend=is_recommend,
         is_ai_mate=is_ai_mate,
         limit=limit,
@@ -432,6 +432,6 @@ def get_restaurant_ai_data(kakao_place_id: str):
 
     AI 데이터가 없는 경우 null을 반환합니다.
     """
-    # kakao_place_id는 ULID이므로 먼저 음식점 정보를 조회하여 diner_idx를 얻음
+    # kakao_place_id는 ULID이므로 먼저 음식점 정보를 조회하여 diner_id를 얻음
     diner = diner_service.get_by_id(kakao_place_id)
-    return ai_data_service.get_by_diner_idx(diner.diner_idx)
+    return ai_data_service.get_by_diner_id(diner.diner_id)

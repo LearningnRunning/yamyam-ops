@@ -2,23 +2,21 @@ from pydantic import BaseModel, Field
 
 
 class KakaoDinerBase(BaseModel):
-    diner_idx: int = Field(..., description="카카오 음식점 고유 인덱스")
-    diner_name: str = Field(
-        ..., min_length=1, max_length=255, description="음식점 이름"
-    )
-    diner_tag: str | None = Field(None, description="음식점 태그")
-    diner_menu_name: str | None = Field(None, description="대표 메뉴명")
-    diner_menu_price: str | None = Field(None, description="메뉴 가격")
-    diner_review_cnt: int = Field(..., ge=0, description="리뷰 개수")
-    diner_review_avg: float = Field(..., ge=0, le=5, description="평균 평점")
-    diner_blog_review_cnt: float = Field(..., ge=0, description="블로그 리뷰 개수")
-    diner_review_tags: str | None = Field(None, description="리뷰 태그")
-    diner_road_address: str | None = Field(None, description="도로명 주소")
-    diner_num_address: str | None = Field(None, description="지번 주소")
-    diner_phone: str | None = Field(None, max_length=50, description="전화번호")
-    diner_lat: float = Field(..., ge=-90, le=90, description="위도")
-    diner_lon: float = Field(..., ge=-180, le=180, description="경도")
-    diner_grade: int | None = Field(None, description="음식점 등급")
+    diner_id: int = Field(..., description="카카오 음식점 고유 인덱스")
+    name: str = Field(..., min_length=1, max_length=255, description="음식점 이름")
+    tag: str | None = Field(None, description="음식점 태그")
+    menu_name: str | None = Field(None, description="대표 메뉴명")
+    menu_price: str | None = Field(None, description="메뉴 가격")
+    review_cnt: int = Field(..., ge=0, description="리뷰 개수")
+    review_avg: float = Field(..., ge=0, le=5, description="평균 평점")
+    blog_review_cnt: float = Field(..., ge=0, description="블로그 리뷰 개수")
+    review_tags: str | None = Field(None, description="리뷰 태그")
+    road_address: str | None = Field(None, description="도로명 주소")
+    num_address: str | None = Field(None, description="지번 주소")
+    phone: str | None = Field(None, max_length=50, description="전화번호")
+    lat: float = Field(..., ge=-90, le=90, description="위도")
+    lon: float = Field(..., ge=-180, le=180, description="경도")
+    grade: int | None = Field(None, description="음식점 등급")
     hidden_score: float | None = Field(None, description="숨찐맛 점수")
     bayesian_score: float | None = Field(None, description="베이지안 평균 점수")
 
@@ -28,20 +26,20 @@ class KakaoDinerCreate(KakaoDinerBase):
 
 
 class KakaoDinerUpdate(BaseModel):
-    diner_name: str | None = Field(None, min_length=1, max_length=255)
-    diner_tag: str | None = None
-    diner_menu_name: str | None = None
-    diner_menu_price: str | None = None
-    diner_review_cnt: int | None = None
-    diner_review_avg: float | None = Field(None, ge=0, le=5)
-    diner_blog_review_cnt: float | None = Field(None, ge=0)
-    diner_review_tags: str | None = None
-    diner_road_address: str | None = None
-    diner_num_address: str | None = None
-    diner_phone: str | None = Field(None, max_length=50)
-    diner_lat: float | None = Field(None, ge=-90, le=90)
-    diner_lon: float | None = Field(None, ge=-180, le=180)
-    diner_grade: int | None = None
+    name: str | None = Field(None, min_length=1, max_length=255)
+    tag: str | None = None
+    menu_name: str | None = None
+    menu_price: str | None = None
+    review_cnt: int | None = None
+    review_avg: float | None = Field(None, ge=0, le=5)
+    blog_review_cnt: float | None = Field(None, ge=0)
+    review_tags: str | None = None
+    road_address: str | None = None
+    num_address: str | None = None
+    phone: str | None = Field(None, max_length=50)
+    lat: float | None = Field(None, ge=-90, le=90)
+    lon: float | None = Field(None, ge=-180, le=180)
+    grade: int | None = None
     hidden_score: float | None = None
     bayesian_score: float | None = None
 
@@ -81,31 +79,31 @@ class FilteredDinerResponse(BaseModel):
     """필터링된 음식점 최소 정보 응답 (id와 distance만)"""
 
     id: str = Field(..., description="음식점 ULID")
-    diner_idx: int = Field(..., description="카카오 음식점 고유 인덱스")
+    diner_id: int = Field(..., description="카카오 음식점 고유 인덱스")
     distance: float = Field(..., description="사용자 위치로부터의 거리 (km)")
 
 
 class KakaoDinerResponse(BaseModel):
     id: str  # ULID
-    diner_idx: int
-    diner_name: str
-    diner_tag: str | None
-    diner_menu_name: str | None
-    diner_menu_price: str | None
-    diner_review_cnt: int
-    diner_review_avg: float
-    diner_blog_review_cnt: float | None
-    diner_review_tags: str | None
-    diner_road_address: str | None
-    diner_num_address: str | None
-    diner_phone: str | None
-    diner_lat: float
-    diner_lon: float
-    diner_category_large: str | None
-    diner_category_middle: str | None
-    diner_category_small: str | None
-    diner_category_detail: str | None
-    diner_grade: int | None
+    diner_id: int
+    name: str
+    tag: str | None
+    menu_name: str | None
+    menu_price: str | None
+    review_cnt: int
+    review_avg: float
+    blog_review_cnt: float | None
+    review_tags: str | None
+    road_address: str | None
+    num_address: str | None
+    phone: str | None
+    lat: float
+    lon: float
+    category_large: str | None
+    category_middle: str | None
+    category_small: str | None
+    category_detail: str | None
+    grade: int | None
     hidden_score: float | None
     bayesian_score: float | None
     distance: float | None = Field(None, description="사용자 위치로부터의 거리 (km)")
@@ -117,11 +115,11 @@ class SearchDinerResponse(BaseModel):
     """음식점 검색 결과 응답 스키마"""
 
     id: str = Field(..., description="음식점 ULID")
-    diner_idx: int = Field(..., description="카카오 음식점 고유 인덱스")
-    diner_name: str = Field(..., description="음식점 이름")
+    diner_id: int = Field(..., description="카카오 음식점 고유 인덱스")
+    name: str = Field(..., description="음식점 이름")
     match_type: str = Field(
         ..., description="매칭 타입 (정확한 매칭, 부분 매칭, 자모 매칭)"
     )
     jamo_score: float | None = Field(None, description="자모 매칭 점수 (0.0-1.0)")
     distance: float | None = Field(None, description="사용자 위치로부터의 거리 (km)")
-    diner_num_address: str | None = Field(None, description="지번 주소")
+    num_address: str | None = Field(None, description="지번 주소")

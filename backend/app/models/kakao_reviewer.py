@@ -9,9 +9,9 @@ class KakaoReviewer(Base, ULIDMixin):
     __tablename__ = "kakao_reviewer"
 
     reviewer_id = Column(String, unique=True, nullable=False, index=True)
-    reviewer_user_name = Column(String(100))
-    reviewer_review_cnt = Column(Integer, nullable=False)
-    reviewer_avg = Column(Float, nullable=False)
+    user_name = Column(String(100))
+    review_cnt = Column(Integer, nullable=False)
+    avg = Column(Float, nullable=False)
     badge_grade = Column(String(50), nullable=False)
     badge_level = Column(Integer, nullable=False)
     crawled_at = Column(DateTime(timezone=True), server_default=func.now())

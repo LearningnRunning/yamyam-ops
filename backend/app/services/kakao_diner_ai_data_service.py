@@ -94,12 +94,10 @@ class KakaoDinerAIDataService(
         """AI 데이터 생성"""
         try:
             if dry_run:
-                logger.info(
-                    f"[DRY RUN] Creating AI data for diner_idx: {data.diner_idx}"
-                )
+                logger.info(f"[DRY RUN] Creating AI data for diner_id: {data.diner_id}")
                 return KakaoDinerAIDataResponse(
                     id="dry_run_id",
-                    diner_idx=data.diner_idx,
+                    diner_id=data.diner_id,
                     ai_bottom_sheet_title=data.ai_bottom_sheet_title,
                     ai_bottom_sheet_summary=data.ai_bottom_sheet_summary,
                     ai_bottom_sheet_sheets=data.ai_bottom_sheet_sheets,
@@ -136,7 +134,7 @@ class KakaoDinerAIDataService(
                     INSERT_KAKAO_DINER_AI_DATA,
                     (
                         ulid,
-                        data.diner_idx,
+                        data.diner_id,
                         data.ai_bottom_sheet_title,
                         data.ai_bottom_sheet_summary,
                         ai_bottom_sheet_sheets_json,
@@ -182,17 +180,17 @@ class KakaoDinerAIDataService(
         except Exception as e:
             self._handle_exception("getting kakao diner AI data by id", e)
 
-    def get_by_diner_idx(
-        self, diner_idx: int, dry_run: bool = False
+    def get_by_diner_id(
+        self, diner_id: int, dry_run: bool = False
     ) -> KakaoDinerAIDataResponse | None:
-        """diner_idx로 AI 데이터 조회"""
+        """diner_id로 AI 데이터 조회"""
         try:
             if dry_run:
-                logger.info(f"[DRY RUN] Getting AI data by diner_idx: {diner_idx}")
+                logger.info(f"[DRY RUN] Getting AI data by diner_id: {diner_id}")
                 return None
 
             with db.get_cursor() as (cursor, conn):
-                cursor.execute(GET_KAKAO_DINER_AI_DATA_BY_DINER_IDX, (diner_idx,))
+                cursor.execute(GET_KAKAO_DINER_AI_DATA_BY_DINER_IDX, (diner_id,))
                 result = cursor.fetchone()
 
                 if not result:
@@ -201,7 +199,7 @@ class KakaoDinerAIDataService(
                 return self._convert_to_response(result)
 
         except Exception as e:
-            self._handle_exception("getting kakao diner AI data by diner_idx", e)
+            self._handle_exception("getting kakao diner AI data by diner_id", e)
 
     def get_list(
         self, skip: int = 0, limit: int = 100, dry_run: bool = False, **filters
@@ -215,7 +213,7 @@ class KakaoDinerAIDataService(
             # 간단한 구현: 전체 조회 (필요시 필터링 추가)
             with db.get_cursor() as (cursor, conn):
                 query = """
-                    SELECT id, diner_idx, ai_bottom_sheet_title, ai_bottom_sheet_summary,
+                    SELECT id, diner_id, ai_bottom_sheet_title, ai_bottom_sheet_summary,
                            ai_bottom_sheet_sheets, ai_bottom_sheet_landing_url, blog_summaries, all_keywords,
                            created_at, updated_at
                     FROM kakao_diner_ai_data
@@ -243,9 +241,9 @@ class KakaoDinerAIDataService(
 
             # 업데이트할 필드 결정 (None이 아닌 값만)
             update_data = {
-                "diner_idx": data.diner_idx
-                if data.diner_idx is not None
-                else existing_data.diner_idx,
+                "diner_id": data.diner_id
+                if data.diner_id is not None
+                else existing_data.diner_id,
                 "ai_bottom_sheet_title": data.ai_bottom_sheet_title
                 if data.ai_bottom_sheet_title is not None
                 else existing_data.ai_bottom_sheet_title,
@@ -286,7 +284,7 @@ class KakaoDinerAIDataService(
                 cursor.execute(
                     UPDATE_KAKAO_DINER_AI_DATA_BY_ID,
                     (
-                        update_data["diner_idx"],
+                        update_data["diner_id"],
                         update_data["ai_bottom_sheet_title"],
                         update_data["ai_bottom_sheet_summary"],
                         ai_bottom_sheet_sheets_json,
@@ -337,36 +335,36 @@ class KakaoDinerAIDataService(
         except Exception as e:
             self._handle_exception("deleting kakao diner AI data", e)
 
-    def delete_by_diner_idx(
-        self, diner_idx: int, dry_run: bool = False
+    def delete_by_diner_id(
+        self, diner_id: int, dry_run: bool = False
     ) -> dict[str, str]:
-        """diner_idx로 AI 데이터 삭제"""
+        """diner_id로 AI 데이터 삭제"""
         try:
             if dry_run:
-                logger.info(f"[DRY RUN] Deleting AI data for diner_idx: {diner_idx}")
+                logger.info(f"[DRY RUN] Deleting AI data for diner_id: {diner_id}")
                 return {
-                    "message": f"[DRY RUN] AI data for diner_idx {diner_idx} would be deleted"
+                    "message": f"[DRY RUN] AI data for diner_id {diner_id} would be deleted"
                 }
 
             with db.get_cursor() as (cursor, conn):
-                cursor.execute(DELETE_KAKAO_DINER_AI_DATA_BY_DINER_IDX, (diner_idx,))
+                cursor.execute(DELETE_KAKAO_DINER_AI_DATA_BY_DINER_IDX, (diner_id,))
                 result = cursor.fetchone()
                 conn.commit()
 
                 if not result:
                     raise HTTPException(
                         status_code=status.HTTP_404_NOT_FOUND,
-                        detail=f"AI data for diner_idx {diner_idx} not found",
+                        detail=f"AI data for diner_id {diner_id} not found",
                     )
 
                 return {
-                    "message": f"AI data for diner_idx {diner_idx} deleted successfully"
+                    "message": f"AI data for diner_id {diner_id} deleted successfully"
                 }
 
         except HTTPException:
             raise
         except Exception as e:
-            self._handle_exception("deleting kakao diner AI data by diner_idx", e)
+            self._handle_exception("deleting kakao diner AI data by diner_id", e)
 
     def get_count(self) -> int:
         """AI 데이터 개수 조회"""
@@ -383,7 +381,7 @@ class KakaoDinerAIDataService(
         """데이터베이스 행을 응답 모델로 변환"""
         return KakaoDinerAIDataResponse(
             id=row["id"],
-            diner_idx=row["diner_idx"],
+            diner_id=row["diner_id"],
             ai_bottom_sheet_title=row["ai_bottom_sheet_title"],
             ai_bottom_sheet_summary=row["ai_bottom_sheet_summary"],
             ai_bottom_sheet_sheets=row["ai_bottom_sheet_sheets"],
